@@ -1,0 +1,126 @@
+# Changelog
+
+{% for entry in tree %}
+## {{ entry.version|replace("v", "") }} - {{ entry.date }}
+
+{# --- Changed --- #}
+{% set changed = [] %}
+{% for c in entry.changes.get("Perf", []) %}{% set _ = changed.append(c) %}{% endfor %}
+{% for c in entry.changes.get("Refactor", []) %}{% set _ = changed.append(c) %}{% endfor %}
+{% for c in entry.changes.get("Style", []) -%}
+  {% if "remove" not in c.message and "deprecate" not in c.message -%}
+    {% set _ = changed.append(c) %}
+  {% endif -%}
+{% endfor -%}
+{% if changed %}
+### 🔄 Changed
+{% for change in changed %}
+- {% if change.footer and "BREAKING" in change.footer %}
+  **Breaking:** {{ change.message }}
+{% elif change.scope and change.footer and "breaking" in change.footer|lower %}
+  **{{ change.scope }} (breaking):** {{ change.message }}
+{% elif change.scope %}
+  **{{ change.scope }}:** {{ change.message }}
+{% else %}
+  {{ change.message }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# --- Added --- #}
+{% set added = [] %}
+{% for c in entry.changes.get("Feat", []) %}{% set _ = added.append(c) %}{% endfor %}
+{% for type, changes in entry.changes.items() -%}
+  {% if type not in ["Feat","Fix","Perf","Refactor","Style","Build","Ci","Test"] -%}
+    {% for c in changes -%}
+      {% if "add" in c.message or "introduce" in c.message -%}
+        {% if c not in changed -%}
+          {% set _ = added.append(c) %}
+        {% endif -%}
+      {% endif -%}
+    {% endfor %}
+  {% endif -%}
+{% endfor-%}
+{% if added %}
+### 🆕 Added
+{% for change in added %}
+- {% if change.footer and "BREAKING" in change.footer %}
+  **Breaking:** {{ change.message }}
+{% elif change.scope and change.footer and "breaking" in change.footer|lower %}
+  **{{ change.scope }} (breaking):** {{ change.message }}
+{% elif change.scope %}
+  **{{ change.scope }}:** {{ change.message }}
+{% else %}
+  {{ change.message }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# --- Removed --- #}
+{% set removed = [] %}
+{% for type, changes in entry.changes.items() -%}
+  {% for c in changes -%}
+    {% if "remove" in c.message or "deprecate" in c.message %}
+      {% set _ = removed.append(c) -%}
+    {% endif -%}
+  {% endfor -%}
+{% endfor -%}
+{% if removed %}
+### 🗑️ Removed
+{% for change in removed %}
+- {% if change.footer and "BREAKING" in change.footer %}
+  **Breaking:** {{ change.message }}
+{% elif change.scope and change.footer and "breaking" in change.footer|lower %}
+  **{{ change.scope }} (breaking):** {{ change.message }}
+{% elif change.scope %}
+  **{{ change.scope }}:** {{ change.message }}
+{% else %}
+  {{ change.message }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# --- Fixed --- #}
+{% set fixed = [] %}
+{% for c in entry.changes.get("Fix", []) %}{% set _ = fixed.append(c) %}{% endfor %}
+{% if fixed %}
+### 🐛 Fixed
+{% for change in fixed %}
+- {% if change.footer and "BREAKING" in change.footer %}
+  **Breaking:** {{ change.message }}
+{% elif change.scope and change.footer and "breaking" in change.footer|lower %}
+  **{{ change.scope }} (breaking):** {{ change.message }}
+{% elif change.scope %}
+  **{{ change.scope }}:** {{ change.message }}
+{% else %}
+  {{ change.message }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{# --- Misc --- #}
+{% set misc = [] %}
+{% for c in entry.changes.get("Build", []) %}{% set _ = misc.append(c) %}{% endfor %}
+{% for c in entry.changes.get("Ci", []) %}{% set _ = misc.append(c) %}{% endfor %}
+{% for c in entry.changes.get("Test", []) %}{% set _ = misc.append(c) %}{% endfor %}
+{% if misc %}
+### 🔧 Misc
+{% for type, changes in entry.changes.items() -%}
+  {% if type in ["Build","Ci","Test"] %}
+  #### {{ type }}
+  {% for change in changes %}
+  - {% if change.footer and "BREAKING" in change.footer %}
+    **Breaking:** {{ change.message }}
+  {% elif change.scope and change.footer and "breaking" in change.footer|lower %}
+    **{{ change.scope }} (breaking):** {{ change.message }}
+  {% elif change.scope %}
+    **{{ change.scope }}:** {{ change.message }}
+  {% else %}
+    {{ change.message }}
+  {% endif %}
+  {% endfor -%}
+  {% endif -%}
+{% endfor -%}
+{% endif %}
+
+{% endfor %}

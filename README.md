@@ -6,7 +6,7 @@ Since Conventional-Commits have their own specification, we cant do much to chan
 
 Therefore, the main goal of this repository is to:
 1. Change how Commitizen read Conventional-Commits
-  - So Cz can extract the field to build Common-Changelog
+    - So Cz can extract the field to build Common-Changelog
 2. Make new Cz changelog template based on Common-Changelog
 3. Make new Conventional-Commit template that be used especially for Cz
 4. Document the result for beginner programmers

@@ -1,7 +1,11 @@
 # Cz-Double_CC
-Implementing Common-Changelog from Conventional-Commits via Commitizen
+
+Implementing [Common-Changelog](https://common-changelog.org/) from [Conventional-Commits](https://www.conventionalcommits.org/en/v1.0.0/) via [Commitizen](https://commitizen-tools.github.io/commitizen/)
+
+[![Common Changelog](https://common-changelog.org/badge.svg)](https://common-changelog.org) [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org) 
 
 ## Goal
+
 Since Conventional-Commits have their own specification, we cant do much to change its template.
 
 Therefore, the main goal of this repository is to:
@@ -16,6 +20,7 @@ Therefore, the main goal of this repository is to:
 ### How Cz read Conventional Commits so commmits can be build automatically into Common-Changelog
 
 ### Common-Changelog rules which already be applied in the current template
+
 - Format
   - [ ] File format
   - [x] Release 
@@ -44,6 +49,7 @@ Therefore, the main goal of this repository is to:
 ### Documentation to guide users
 
 ## HELP WANTED
+
 Help and Contribution are very needed!
 
 1. Fork this repository

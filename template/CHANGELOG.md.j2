@@ -1,48 +1,85 @@
 {% for entry in tree -%}
 {# --- Definitions: build groups first --- #}
+{##}
+{# Changed #}
+{% set changed_verbs = ["move", "rename", "deprecate"] -%}
 {% set changed = [] -%}
-{% for c in entry.changes.get("Perf", []) %}{% set _ = changed.append(c) %}{% endfor -%}
-{% for c in entry.changes.get("Refactor", []) %}{% set _ = changed.append(c) %}{% endfor -%}
-{% for c in entry.changes.get("Style", []) -%}
-  {% if "remove" not in c.message and "deprecate" not in c.message and "delete" not in c.message  -%}
+{% for c in entry.changes.get("Perf", []) -%}
+  {% if not c.message.lower().startswith("fix") -%}
     {% set _ = changed.append(c) -%}
   {% endif -%}
 {% endfor -%}
+{% for c in entry.changes.get("Refactor", []) -%}
+  {% if not c.message.lower().startswith("fix") -%}
+    {% set _ = changed.append(c) -%}
+  {% endif -%}
+{% endfor -%}
+{% for c in entry.changes.get("Revert", []) %}{% set _ = changed.append(c) %}{% endfor -%}
+{% for type, changes in entry.changes.items() -%}
+  {% if type not in ["Style","Chore"] -%}
+    {% for c in changes -%}
+      {% for verb in changed_verbs -%}
+        {% if c.message.lower().startswith(verb) -%}
+          {% set _ = changed.append(c) -%}
+        {% endif -%}
+      {% endfor -%}
+    {% endfor -%}
+  {% endif -%}
+{% endfor -%}
 {##}
+{# Added #}
+{% set added_verbs = ["add", "introduce"] -%}
 {% set added = [] -%}
 {% for c in entry.changes.get("Feat", []) %}{% set _ = added.append(c) %}{% endfor -%}
 {% for type, changes in entry.changes.items() -%}
-{# Excluding some type #}
-  {% if type not in ["Feat","Fix","Perf","Refactor","Style","Build","Ci","Test"] -%}
+  {% if type not in ["Perf","Refactor","Fix","Style","Chore"] -%}
     {% for c in changes -%}
-      {% if "add" in c.message or "introduce" in c.message -%}
-        {% if c not in changed -%}
+      {% for verb in added_verbs -%}
+        {% if c.message.lower().startswith(verb) -%}
           {% set _ = added.append(c) -%}
         {% endif -%}
-      {% endif -%}
-    {% endfor %}
+      {% endfor -%}
+    {% endfor -%}
   {% endif -%}
-{% endfor-%}
-{##}
-{% set removed = [] -%}
-{% for type, changes in entry.changes.items() -%}
-  {% for c in changes -%}
-    {% if "remove" in c.message or "deprecate" in c.message or "delete" in c.message -%}
-      {% set _ = removed.append(c) -%}
-    {% endif -%}
-  {% endfor -%}
 {% endfor -%}
 {##}
-{% set fixed = [] -%}
-{% for c in entry.changes.get("Fix", []) %}{% set _ = fixed.append(c) %}{% endfor -%}
+{# Removed #}
+{% set removed_verbs = ["remove", "delete", "drop"] -%}
+{% set removed = [] -%}
+{% for type, changes in entry.changes.items() -%}
+  {% if type not in ["Style","Chore"] -%}
+    {% for c in changes -%}
+      {% for verb in removed_verbs -%}
+        {% if c.message.lower().startswith(verb) -%}
+          {% set _ = removed.append(c) -%}
+        {% endif -%}
+      {% endfor -%}
+    {% endfor -%}
+  {% endif -%}
+{% endfor -%}
 {##}
-{% set misc = [] -%}
-{% for c in entry.changes.get("Build", []) %}{% set _ = misc.append(c) %}{% endfor -%}
-{% for c in entry.changes.get("Ci", []) %}{% set _ = misc.append(c) %}{% endfor -%}
-{% for c in entry.changes.get("Test", []) %}{% set _ = misc.append(c) %}{% endfor -%}
+{# Fixed #}
+{% set fixed_verbs = ["fix"] -%}
+{% set fixed = [] -%}
+{% for c in entry.changes.get("Fix", []) -%}
+  {% if c.type != "Docs" -%}
+    {% set _ = fixed.append(c) -%}
+  {% endif -%}
+{% endfor -%}
+{% for type, changes in entry.changes.items() -%}
+  {% if type not in ["Style","Chore","Docs"] -%}
+    {% for c in changes -%}
+      {% for verb in fixed_verbs -%}
+        {% if c.message.lower().startswith(verb) -%}
+          {% set _ = fixed.append(c) -%}
+        {% endif -%}
+      {% endfor -%}
+    {% endfor -%}
+  {% endif -%}
+{% endfor -%}
 {##}
 {# --- Output starts here --- #}
-
+{##}
 ## {{ entry.version|replace("v", "") }} - {{ entry.date }}
 {##}
 {% if changed %}
@@ -50,7 +87,7 @@
 ### 🔄 Changed
 
 {% for change in changed -%}
-- {% if change.footer and "BREAKING" in change.footer -%}
+- {% if change.footer and "breaking" in change.footer|lower -%}
   **Breaking:** {{ change.message }}
 {% elif change.scope and change.footer and "breaking" in change.footer|lower -%}
   **{{ change.scope }} (breaking):** {{ change.message }}
@@ -67,7 +104,7 @@
 ### 🆕 Added
 
 {% for change in added -%}
-- {% if change.footer and "BREAKING" in change.footer -%}
+- {% if change.footer and "breaking" in change.footer|lower -%}
   **Breaking:** {{ change.message }}
 {% elif change.scope and change.footer and "breaking" in change.footer|lower -%}
   **{{ change.scope }} (breaking):** {{ change.message }}
@@ -84,7 +121,7 @@
 ### 🗑️ Removed
 
 {% for change in removed -%}
-- {% if change.footer and "BREAKING" in change.footer %}
+- {% if change.footer and "breaking" in change.footer|lower -%}
   **Breaking:** {{ change.message }}
 {% elif change.scope and change.footer and "breaking" in change.footer|lower -%}
   **{{ change.scope }} (breaking):** {{ change.message }}
@@ -101,7 +138,7 @@
 ### 🐛 Fixed
 
 {% for change in fixed -%}
-- {% if change.footer and "BREAKING" in change.footer %}
+- {% if change.footer and "breaking" in change.footer|lower -%}
   **Breaking:** {{ change.message }}
 {% elif change.scope and change.footer and "breaking" in change.footer|lower -%}
   **{{ change.scope }} (breaking):** {{ change.message }}
@@ -113,27 +150,5 @@
 {% endfor -%}
 {% endif %}
 {##}
-{% if misc %}
 
-### 🔧 Misc
-
-{% for type, changes in entry.changes.items() -%}
-  {% if type in ["Build","Ci","Test"] -%}
-
-  #### {{ type }}
-  
-  {% for change in changes -%}
-  - {% if change.footer and "BREAKING" in change.footer -%}
-    **Breaking:** {{ change.message }}
-  {% elif change.scope and change.footer and "breaking" in change.footer|lower -%}
-    **{{ change.scope }} (breaking):** {{ change.message }}
-  {% elif change.scope -%}
-    **{{ change.scope }}:** {{ change.message }}
-  {% else -%}
-    {{ change.message }}
-  {% endif -%}
-  {% endfor -%}
-  {% endif -%}
-{% endfor -%}
-{% endif -%}
 {% endfor -%}
